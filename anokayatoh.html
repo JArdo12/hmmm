@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Valentine ❤️</title>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+
+<style>
+body{
+    margin:0;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    background:linear-gradient(135deg,#ff9bbf,#ffd6e6);
+    overflow:hidden;
+    font-family:sans-serif;
+}
+
+/* SCENE - Made responsive with max-width */
+.scene{
+    position:relative;
+    width: 100%;
+    max-width:500px; 
+    height: 300px; /* Shorter for mobile screens */
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.bottom, .top{ position:absolute; width:220px; z-index:1; }
+.top{ z-index:3; cursor:pointer; transition:1.2s cubic-bezier(.2,.8,.2,1), opacity 0.8s ease; }
+
+/* Adjust these scales for mobile */
+.open .top{ transform:translateY(-80px) translateX(-100px) rotate(-20deg); opacity:0; }
+.pop{ position:absolute; width:250px; bottom:60px; opacity:0; transform:translateY(60px) scale(.2); transition:1.4s cubic-bezier(.2,.8,.2,1); z-index:3; filter:drop-shadow(0 18px 20px rgba(0,0,0,0.45)); }
+.open .pop{ opacity:1; transform:translateY(-10px) scale(1.3); }
+.open .bottom{ opacity:0; }
+
+/* MESSAGE - Dynamic font size */
+.valentine-text{
+    font-size: clamp(32px, 10vw, 58px); 
+    color: white;
+    font-family: 'Pacifico', cursive;
+    text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    opacity: 0;
+    transition: opacity 1.5s ease 0.5s;
+    text-align: center;
+    margin-top: 10px;
+    width: 90%;
+}
+.valentine-text.show{ opacity: 1; }
+
+/* BUTTONS CONTAINER */
+.buttons{
+    display:flex;
+    justify-content:center;
+    align-items: center;
+    gap: 30px; /* Reduced gap for mobile */
+    margin-top: 20px;
+    opacity: 0;
+    transition: opacity 1.6s ease 0.9s;
+    position: relative;
+    width: 100%;
+    height: 100px; 
+}
+.buttons.visible{ opacity: 1; }
+
+/* SAD IMAGE - Positioned relative to the button it replaces */
+.sad-image{
+    position: absolute;
+    /* This aligns it over the left-side (No button) area */
+    left: 50%;
+    transform: translateX(-130%); 
+    display: none;
+    width: 100px; 
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    opacity: 0;
+    transition: opacity 1s ease;
+    z-index: 5;
+}
+
+.yes-btn, .no-btn{
+    padding: 12px 30px;
+    font-size: clamp(20px, 5vw, 28px);
+    font-family: 'Pacifico', cursive;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+    transition: all 0.3s;
+    white-space: nowrap;
+}
+.yes-btn{ background: #ff4d94; color: white; }
+.no-btn{ background: #888; color: white; }
+
+.no-btn.fall{
+    animation: fallOff 1.3s forwards;
+    pointer-events: none; 
+}
+@keyframes fallOff{
+    to{ transform: translateY(600px) rotate(45deg); opacity: 0; }
+}
+
+/* FLOATING CAT GIFs */
+.floating-cat{
+    position: absolute;
+    pointer-events: none;
+    animation: floatUp linear infinite;
+    z-index: 100;
+    border-radius: 10px;
+}
+
+/* BUBBLES & CAT ANIMATION */
+@keyframes floatUp{
+    0% { transform: translateY(110vh); opacity:0;}
+    10% { opacity: 0.9; }
+    90% { opacity: 0.9; }
+    100% { transform: translateY(-20vh); opacity:0;}
+}
+
+.bubble{
+    position:absolute;
+    border-radius:50%;
+    background: rgba(255,255,255,0.3);
+    pointer-events:none;
+    animation: floatUp linear infinite;
+}
+
+/* PRELOADER */
+#preloader { position: absolute; width: 0; height: 0; overflow: hidden; z-index: -1; }
+
+/* Tablet/Desktop Adjustments */
+@media (min-width: 600px) {
+    .scene { height: 420px; }
+    .bottom, .top { width: 320px; }
+    .pop { width: 360px; }
+    .buttons { gap: 70px; }
+    .sad-image { transform: translateX(-150%); width: 120px; }
+    .yes-btn, .no-btn { padding: 18px 48px; }
+}
+</style>
+</head>
+
+<body>
+
+<div id="preloader">
+    <img src="1.gif"> <img src="2.gif"> <img src="3.gif">
+    <img src="4.gif"> <img src="5.gif"> <img src="erm.png">
+</div>
+
+<div class="scene" id="scene">
+    <img src="bot.png" class="bottom">
+    <img src="bingbong.png" class="pop">
+    <img src="top.png" class="top" onclick="openBox()">
+</div>
+
+<div class="valentine-text" id="valentine-text">Be my Valentine?</div>
+
+<div class="buttons" id="buttons">
+    <button id="no-btn" class="no-btn">No 😢</button>
+    <button id="yes-btn" class="yes-btn">Yes ❤️</button>
+    <img id="sad-image" src="erm.png" class="sad-image">
+</div>
+
+<audio id="song" src="heh.mp3"></audio>
+<audio id="yes-sound" src="huh.mp3"></audio>
+<audio id="no-sound" src="bam.mp3"></audio>
+
+<script>
+const catGifs = ["1.gif", "2.gif", "3.gif", "4.gif", "5.gif"];
+let catInterval = null;
+
+function createCat() {
+    const cat = document.createElement("img");
+    cat.src = catGifs[Math.floor(Math.random() * catGifs.length)];
+    cat.classList.add("floating-cat");
+    
+    // Slightly smaller cats for mobile
+    const isMobile = window.innerWidth < 600;
+    const size = isMobile ? (Math.random() * 60 + 50) : (Math.random() * 100 + 80);
+    
+    cat.style.width = size + "px";
+    cat.style.left = Math.random() * 90 + "%"; // Keep away from right edge
+    
+    const duration = Math.random() * 3 + 4;
+    cat.style.animationDuration = duration + "s";
+    
+    document.body.appendChild(cat);
+    setTimeout(() => cat.remove(), duration * 1000);
+}
+
+function openBox(){
+    document.getElementById("scene").classList.add("open");
+    document.getElementById("valentine-text").classList.add("show");
+    setTimeout(() => { document.getElementById("buttons").classList.add("visible"); }, 1100);
+    const music = document.getElementById("song");
+    music.currentTime = 0; music.play();
+
+    setInterval(() => {
+        const bubble = document.createElement("div");
+        bubble.classList.add("bubble");
+        const size = Math.random()*40 + 20;
+        bubble.style.width = size + "px";
+        bubble.style.height = size + "px";
+        bubble.style.left = Math.random()*100 + "%";
+        bubble.style.animationDuration = (Math.random()*5 + 5) + "s";
+        document.body.appendChild(bubble);
+        setTimeout(() => bubble.remove(), 10000);
+    }, 250);
+}
+
+document.getElementById("yes-btn").addEventListener("click", () => {
+    document.getElementById("yes-sound").play();
+    if (!catInterval) {
+        // Instant burst of 10 cats
+        for(let i = 0; i < 10; i++) { createCat(); }
+        catInterval = setInterval(createCat, 150);
+        setTimeout(() => {
+            clearInterval(catInterval);
+            catInterval = null;
+        }, 15000);
+    }
+});
+
+document.getElementById("no-btn").addEventListener("click", () => {
+    document.getElementById("no-sound").play();
+    const noBtn = document.getElementById("no-btn");
+    noBtn.classList.add("fall");
+
+    setTimeout(() => {
+        noBtn.style.visibility = "hidden"; 
+        const sad = document.getElementById("sad-image");
+        sad.style.display = "block";
+        setTimeout(() => sad.style.opacity = "1", 50);
+    }, 1300);
+});
+</script>
+
+</body>
+</html>
